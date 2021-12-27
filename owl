@@ -3,7 +3,7 @@
 
 
 # proximo:
-# - votar enlaces
+# - permitir listar por páginas de 10 enlaces
 # - marcar enlaces leidos
 # - comentar enlaces
 
@@ -33,11 +33,10 @@ def add(args):
     addMark(line)
 
 
-
 def listl(args):
     c=1
     for m in sorted_marks:
-        print ("[%d] %s"%(c,m.string()),end="")
+        print ("[%d] %s"%(c,m.stringHeader()),end="")
         c+=1
 
 def openbrowser(args):
@@ -49,12 +48,15 @@ def openbrowser(args):
     except:
         print ("Id incorrecto")
         return
-    if (sorted_marks[number-1]):
+    if ((number>0) and (number <= len(sorted_marks))):
         url = sorted_marks[number-1].url
         if url.startswith("gemini://"):
             os.system(GEMINI_BROWSER+" "+sorted_marks[number-1].url)
         else:
             os.system(HTTP_BROWSER+" "+sorted_marks[number-1].url)
+    else:
+        print ("Id incorrecto")
+
 
 
 def vote(args):
@@ -66,10 +68,13 @@ def vote(args):
     except:
         print ("Id incorrecto")
         return
-    if (number <= len(sorted_marks)):
+    if ((number>0) and (number <= len(sorted_marks))):
         key=sorted_marks[number-1].key
-        stamp=dt.timestamp(dt.today())
-        addMark("%f;vote;%s" %(stamp,key))
+        if (user in sorted_marks[number-1].ups):
+            print ("Ya votaste este enlace")
+        else:
+            stamp=dt.timestamp(dt.today())
+            addMark("%f;vote;%s" %(stamp,key))
     else:
         print ("Id incorrecto")
 
@@ -77,17 +82,35 @@ def vote(args):
 def vhelp(args):
     helpmsg='''
     - list: Lista enlaces encontrados.
+    - view: Muestra los detalles de un enlace (autor, fecha, comentarios, etc.).
     - add: Agrega un nuevo enlace.
     - vote: Vota un enlace. 
     - open: Abre el enlace en el navegador.
     '''
     print (helpmsg)
 
+def refresh(args):
+    loadGlobalLog()
+    print ("Recargado el log global")
+
+def view(args):
+    if (len(args)<1):
+        print ("Falta id del enlace")
+        return
+    try:
+        number=int(args[0])
+    except:
+        print ("Id incorrecto")
+        return
+    if ((number>0) and (number <= len(sorted_marks))):
+        key=sorted_marks[number-1].key
+        print ("%s"%sorted_marks[number-1].stringExtended())
+    else:
+        print ("Id incorrecto")
 
 
 
-
-def loadMarks():
+def loadGlobalLog():
     marks=[]
     global link_list
 
@@ -112,7 +135,7 @@ def loadMarks():
 
     # ordeno por fecha
     global sorted_marks
-    sorted_marks=sorted(marks,key=lambda m:m.stamp)
+    sorted_marks=sorted(marks,key=lambda m:m.stamp,reverse=True)
 
 
 def addMark(marktext):
@@ -131,13 +154,20 @@ class LinkMark:
         self.title="".join(args[4:]).strip("\n")
         self.user=user
 
-    def string(self):
+    def stringHeader(self):
+        prot="HTTP"
+        if (self.url.startswith("gemini://")):
+            prot="GEM"
+        ups=len(self.ups)
+        return "[%s:%d ups] %s\n"%(prot,ups,self.title)
+
+    def stringExtended(self):
         d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
         prot="HTTP"
         if (self.url.startswith("gemini://")):
             prot="GEM"
         ups=len(self.ups)
-        return "From %s (%s) [%s:%d ups]\t%s\n"%(self.user,d,prot,ups,self.title)
+        return "%s\t- From %s (%s)\n\t- %s"%(self.stringHeader(),self.user,d,self.url)
 
 
 ## binds
@@ -147,10 +177,11 @@ cmd["list"]=listl
 cmd["open"]=openbrowser
 cmd["vote"]=vote
 cmd["help"]=vhelp
+cmd["reload"]=refresh
+cmd["view"]=view
 
 if __name__=="__main__":
-    loadMarks()
-    #print (sorted_marks)
+    loadGlobalLog()
     while(True):
         userline = str(input("owl> ")).strip()
         if (len(userline)>0):
