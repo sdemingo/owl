@@ -10,6 +10,7 @@
 
 import sys
 import os
+import hashlib
 from datetime import datetime as dt
 
 OWL_LOGFILE="owl.log"
@@ -18,19 +19,20 @@ HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
 
 sorted_marks=[]
-user=os.getenv("USER")
+link_list={}
+#user=os.getenv("USER")
+user="a"
 
 def add(args):
     stamp=dt.timestamp(dt.today())
-    url=""
-    title=""
     url=str(input("URL: ")).strip()
     title=str(input("Título: "))
+    key=hashlib.md5(url.encode()).hexdigest()
     if (not url.startswith("http://")) and (not url.startswith("gemini://")):
         url="http://"+url
-    filepath=os.path.join(USR_DIR,user,OWL_LOGFILE)
-    with open(filepath,'a', encoding="utf-8") as f:
-        f.write("%f;add;%s;%s\n" %(stamp,url,title))
+    line="%f;add;%s;%s;%s" %(stamp,key,url,title)
+    addMark(line)
+
 
 
 def listl(args):
@@ -55,11 +57,23 @@ def openbrowser(args):
         else:
             os.system(HTTP_BROWSER+" "+sorted_marks[number-1].url)
 
-
+def vote(args):
+    if (len(args)<1):
+        print ("Faltan argumentos")
+        return
+    try:
+        number=int(args[0])
+    except:
+        print ("Orden mal formada")
+        return
+    if (sorted_marks[number-1]):
+        addMark("%f;vote;%s;%s" %(stamp,url,title))
 
 
 def loadMarks():
     marks=[]
+    global link_list
+
     dirs=os.listdir(USR_DIR)
     for d in dirs:
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
@@ -67,38 +81,46 @@ def loadMarks():
             with open(os.path.join(USR_DIR,d,OWL_LOGFILE),'r', encoding="utf-8") as f:
                 lines=f.readlines()
             for l in lines:
-                if (len(l.strip("\n"))>0):
-                    try:
-                        mark=Logmark(user,l)
-                        marks.append(mark)
-                    except Exception as e:
-                        print (e)
+                fields=l.strip("\n").split(";")
+                if (len(fields)>2):
+                        if (fields[1] == "add"):
+                            mark=LinkMark(user,fields)
+                            marks.append(mark)
+                            link_list[mark.key]=mark
+
+                        if (fields[1] == "vote"):
+                            key=fields[2]
+                            if (key in link_list):
+                                link_list[key].ups[user]=1
 
     # ordeno por fecha
     global sorted_marks
     sorted_marks=sorted(marks,key=lambda m:m.stamp)
 
 
-class Logmark:
-    def __init__(self,user, line):
-        fields=line.split(";")
-        if (len(fields)<4):
-            raise Exception("Marca mal formada")
+def addMark(marktext):
+    filepath=os.path.join(USR_DIR,user,OWL_LOGFILE)
+    with open(filepath,'a', encoding="utf-8") as f:
+        f.write(marktext+"\n")    
 
-        self.stamp=fields[0]
-        self.cmd=fields[1]
-        self.url=fields[2]
-        self.title="".join(fields[3:]).strip("\n")
+
+class LinkMark:
+    def __init__(self,user, args):
+        self.stamp=args[0]
+        self.cmd=args[1]
+        self.key=args[2]
+        self.url=args[3]
+        self.ups={}
+        self.title="".join(args[4:]).strip("\n")
         self.user=user
 
     def string(self):
-        if (self.cmd=="add"):
-            d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
-            prot="HTTP"
-            if (self.url.startswith("gemini://")):
-                prot="GEM"
-            return "From %s (%s) [%s]\t%s\n"%(self.user,d,prot,self.title)
-
+        d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
+        prot="HTTP"
+        if (self.url.startswith("gemini://")):
+            prot="GEM"
+        ups=len(self.ups)
+        return "From %s (%s) [%s:%d ups]\t%s\n"%(self.user,d,prot,ups,self.title)
 
 
 ## binds
@@ -106,6 +128,7 @@ cmd={}
 cmd["add"]=add
 cmd["list"]=listl
 cmd["open"]=openbrowser
+cmd["vote"]=vote
 
 if __name__=="__main__":
     loadMarks()
