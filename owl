@@ -66,8 +66,12 @@ def vote(args):
     except:
         print ("Orden mal formada")
         return
-    if (sorted_marks[number-1]):
-        addMark("%f;vote;%s;%s" %(stamp,url,title))
+    if (number <= len(sorted_marks)):
+        key=sorted_marks[number-1].key
+        stamp=dt.timestamp(dt.today())
+        addMark("%f;vote;%s" %(stamp,key))
+    else:
+        print ("Orden mal formada")
 
 
 def loadMarks():
