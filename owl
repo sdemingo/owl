@@ -3,7 +3,6 @@
 
 
 # próximo:
-# - permitir listar uno a uno a partir de 10 enlaces pulsando una tecla
 # - marcar enlaces leídos
 # - comentar enlaces
 # - mostrar comentarios poco a poco
@@ -20,6 +19,7 @@ OWL_LOGFILE=".owl.log"
 USR_DIR="/home"
 HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
+LINKS_PER_PAGE=10
 
 sorted_marks=[]
 link_list={}
@@ -44,6 +44,8 @@ def listl(args):
     for m in sorted_marks:
         print ("[%d] %s"%(c,m.stringHeader()),end="")
         c+=1
+        if (c % LINKS_PER_PAGE == 0):
+            input("\tPulsa una tecla para seguir o 'q' para abortar ...\n")
 
 def openbrowser(args):
     if (len(args)<1):
