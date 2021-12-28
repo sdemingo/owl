@@ -222,7 +222,7 @@ def loadGlobalLog():
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
             user=d
             loadUserLog(user)
-    sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
+    sorted_marks=sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
 
 
 def loadUserLog(userlog):
