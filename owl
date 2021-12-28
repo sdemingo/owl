@@ -210,7 +210,7 @@ cmd["view"]=view
 ###
 
 def printMainPage():
-    c=0
+    c=1
     for m in sorted_marks[:20]:
         print ("[%d] %s"%(c,m.stringHeader()),end="")
         c+=1
