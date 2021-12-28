@@ -3,8 +3,8 @@
 
 
 # próximo:
-# - permitir listar por páginas de 10 enlaces
-# - marcar enlaces leidos
+# - permitir listar uno a uno a partir de 10 enlaces pulsando una tecla
+# - marcar enlaces leídos
 # - comentar enlaces
 # - mostrar comentarios poco a poco
 # - permitir etiquetar enlaces
@@ -16,8 +16,8 @@ import os
 import hashlib
 from datetime import datetime as dt
 
-OWL_LOGFILE="owl.log"
-USR_DIR="users"     #/home
+OWL_LOGFILE=".owl.log"
+USR_DIR="/home"
 HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
 
@@ -34,6 +34,7 @@ def add(args):
         url="http://"+url
     line="%f;add;%s;%s;%s" %(stamp,key,url,title)
     addMark(line)
+    loadUserLog(user)
 
 
 def listl(args):
@@ -78,6 +79,8 @@ def vote(args):
         else:
             stamp=dt.timestamp(dt.today())
             addMark("%f;vote;%s" %(stamp,key))
+            link=link_list[key]
+            link.addVoteFrom(user)
     else:
         print ("Id incorrecto")
 
@@ -114,31 +117,33 @@ def view(args):
 
 
 def loadGlobalLog():
-    marks=[]
-    global link_list
-
     dirs=os.listdir(USR_DIR)
     for d in dirs:
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
             user=d
-            with open(os.path.join(USR_DIR,d,OWL_LOGFILE),'r', encoding="utf-8") as f:
-                lines=f.readlines()
-            for l in lines:
-                fields=l.strip("\n").split(";")
-                if (len(fields)>2):
-                        if (fields[1] == "add"):
-                            mark=LinkMark(user,fields)
-                            marks.append(mark)
-                            link_list[mark.key]=mark
+            loadUserLog(user)
 
-                        if (fields[1] == "vote"):
-                            key=fields[2]
-                            if (key in link_list):
-                                link_list[key].ups[user]=1
 
-    # ordeno por fecha
+def loadUserLog(userlog):
     global sorted_marks
-    sorted_marks=sorted(marks,key=lambda m:m.stamp,reverse=True)
+    global link_list
+
+    with open(os.path.join(USR_DIR,userlog,OWL_LOGFILE),'r', encoding="utf-8") as f:
+            lines=f.readlines()
+    for l in lines:
+        fields=l.strip("\n").split(";")
+        if (len(fields)>2):
+            if (fields[1] == "add"):
+                mark=LinkMark(user,fields)
+                sorted_marks.append(mark)
+                link_list[mark.key]=mark
+
+            if (fields[1] == "vote"):
+                key=fields[2]
+                link=link_list[key]
+                link.addVoteFrom(user)
+
+    sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
 
 
 def addMark(marktext):
@@ -171,6 +176,9 @@ class LinkMark:
             prot="GEM"
         ups=len(self.ups)
         return "%s\t- From %s (%s)\n\t- %s"%(self.stringHeader(),self.user,d,self.url)
+
+    def addVoteFrom(self,user):
+        self.ups[user]=1  
 
 
 ## binds
