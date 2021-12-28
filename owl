@@ -162,7 +162,7 @@ class LinkMark:
         if (self.url.startswith("gemini://")):
             prot="GEM"
         ups=len(self.ups)
-        return "[%s:%d ups] %s\n"%(prot,ups,self.title)
+        return "[{0:<4}:{1:>2} ups] {2}\n".format(prot,ups,self.title)
 
     def stringExtended(self):
         d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
