@@ -15,10 +15,9 @@ import sys
 import os
 import hashlib
 from datetime import datetime as dt
-import bisect
 
 OWL_LOGFILE=".owl.log"
-USR_DIR="users"
+USR_DIR="/home"
 HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
 
@@ -124,8 +123,9 @@ def loadGlobalLog():
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
             user=d
             loadUserLog(user)
-
     sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
+
+
 
 def loadUserLog(userlog):
     global sorted_marks
@@ -146,10 +146,6 @@ def loadUserLog(userlog):
                 link=link_list[key]
                 link.addVoteFrom(user)
 
-    #sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
-
-def insertLink(link):
-    bisect.insort(l, r)  
 
 def addMark(marktext):
     filepath=os.path.join(USR_DIR,user,OWL_LOGFILE)
