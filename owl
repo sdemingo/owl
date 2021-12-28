@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 
-# proximo:
+# próximo:
 # - permitir listar por páginas de 10 enlaces
 # - marcar enlaces leidos
 # - comentar enlaces
+# - mostrar comentarios poco a poco
+# - permitir etiquetar enlaces
+# - permitir listar por usuario, etiquetas, ...
 
 
 import sys
