@@ -95,9 +95,7 @@ def vhelp(args):
     '''
     print (helpmsg)
 
-def refresh(args):
-    loadGlobalLog()
-    print ("Recargado el log global")
+
 
 def view(args):
     if (len(args)<1):
@@ -188,7 +186,6 @@ cmd["list"]=listl
 cmd["open"]=openbrowser
 cmd["vote"]=vote
 cmd["help"]=vhelp
-cmd["reload"]=refresh
 cmd["view"]=view
 
 if __name__=="__main__":
