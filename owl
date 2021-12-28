@@ -15,9 +15,10 @@ import sys
 import os
 import hashlib
 from datetime import datetime as dt
+import bisect
 
 OWL_LOGFILE=".owl.log"
-USR_DIR="/home"
+USR_DIR="users"
 HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
 
@@ -29,12 +30,14 @@ def add(args):
     stamp=dt.timestamp(dt.today())
     url=str(input("URL: ")).strip()
     title=str(input("Título: "))
-    key=hashlib.md5(url.encode()).hexdigest()
+    key=hashlib.md5((url+str(stamp)).encode()).hexdigest()
     if (not url.startswith("http://")) and (not url.startswith("gemini://")):
         url="http://"+url
     line="%f;add;%s;%s;%s" %(stamp,key,url,title)
     addMark(line)
-    loadUserLog(user)
+    link=LinkMark(user,[stamp,"add",key,url,title])
+    sorted_marks.append(link)
+    link_list[link.key]=link
 
 
 def listl(args):
@@ -115,12 +118,14 @@ def view(args):
 
 
 def loadGlobalLog():
+    global sorted_marks
     dirs=os.listdir(USR_DIR)
     for d in dirs:
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
             user=d
             loadUserLog(user)
 
+    sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
 
 def loadUserLog(userlog):
     global sorted_marks
@@ -141,8 +146,10 @@ def loadUserLog(userlog):
                 link=link_list[key]
                 link.addVoteFrom(user)
 
-    sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
+    #sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
 
+def insertLink(link):
+    bisect.insort(l, r)  
 
 def addMark(marktext):
     filepath=os.path.join(USR_DIR,user,OWL_LOGFILE)
@@ -176,7 +183,7 @@ class LinkMark:
         return "%s\t- From %s (%s)\n\t- %s"%(self.stringHeader(),self.user,d,self.url)
 
     def addVoteFrom(self,user):
-        self.ups[user]=1  
+        self.ups[user]=1 
 
 
 ## binds
