@@ -87,7 +87,7 @@ def add(args):
     url=str(input("URL: ")).strip()
     title=str(input("Título: "))
     key=hashlib.md5((url+str(stamp)+user).encode()).hexdigest()
-    if (not url.startswith("http://")) and (not url.startswith("gemini://")):
+    if (not url.startswith("http://")) and (not url.startswith("https://")) and (not url.startswith("gemini://")):
         url="http://"+url
     line="%f;add;%s;%s;%s" %(stamp,key,url,title)
     addMark(line)
