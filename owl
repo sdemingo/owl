@@ -363,6 +363,9 @@ def loadConfigFile():
     global HTTP_BROWSER
     global GEMINI_BROWSER
 
+    if (not os.path.isfile(os.path.join(userhome,OWL_CONFIGFILE))):
+        return
+
     try:
         with open(os.path.join(userhome,OWL_CONFIGFILE)) as cfile:
             data = json.load(cfile)
