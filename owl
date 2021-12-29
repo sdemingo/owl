@@ -89,7 +89,7 @@ def add(args):
         url="http://"+url
     line="%f;add;%s;%s;%s" %(stamp,key,url,title)
     addMark(line)
-    link=LinkMark(user,[stamp,"add",key,url,title])
+    link=Link(user,[stamp,"add",key,url,title])
     sorted_marks.append(link)
     link_list[link.key]=link
 
@@ -162,11 +162,12 @@ def vote(args):
 
 def vhelp(args):
     helpmsg='''
-    - list: Lista enlaces encontrados.
-    - view: Muestra los detalles de un enlace (autor, fecha, comentarios, etc.).
-    - add: Agrega un nuevo enlace.
-    - vote: Vota un enlace. 
-    - open: Abre el enlace en el navegador.
+    - list:     Lista enlaces encontrados.
+    - view:     Muestra los detalles de un enlace (autor, fecha, comentarios, etc.).
+    - add:      Agrega un nuevo enlace.
+    - vote:     Vota un enlace. 
+    - open:     Abre el enlace en el navegador.
+    - comment:  Añade un comentario sobre un enlace
     '''
     print (helpmsg)
 
@@ -190,6 +191,39 @@ def view(args):
         print ("Id incorrecto")
 
 
+def comment(args):
+    """
+    Comando para añadir comentarios a un enlace
+    """    
+    if (len(args)<1):
+        print ("Falta id del enlace")
+        return
+    try:
+        number=int(args[0])
+    except:
+        print ("Id incorrecto")
+        return
+    if ((number>0) and (number <= len(sorted_marks))):
+        key=sorted_marks[number-1].key
+        stamp=dt.timestamp(dt.today())
+        print("Escribe tu comentario (max 500 palabras). Pulsa Ctrl-D para guardarlo.")
+        lines = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            lines.append(line)
+
+        text="\\n".join(lines)
+        addMark("%f;cmt;%s;%s" %(stamp,key,text))
+        link=link_list[key]
+        link.addComment(Comment(link,user,text))
+    else:
+        print ("Id incorrecto")    
+
+
+
 ###
 ### Enlazado de funciones a comandos
 ###
@@ -201,6 +235,7 @@ cmd["open"]=openbrowser
 cmd["vote"]=vote
 cmd["help"]=vhelp
 cmd["view"]=view
+cmd["comment"]=comment
 
 
 
@@ -235,7 +270,7 @@ def loadUserLog(userlog):
         fields=l.strip("\n").split(";")
         if (len(fields)>2):
             if (fields[1] == "add"):
-                mark=LinkMark(user,fields)
+                mark=Link(user,fields)
                 sorted_marks.append(mark)
                 link_list[mark.key]=mark
 
@@ -249,6 +284,11 @@ def loadUserLog(userlog):
                 link=link_list[key]
                 link.addViewer(user)   
 
+            if (fields[1] == "cmt"):
+                key=fields[2]
+                link=link_list[key]
+                link.addComment(Comment(link,user,fields[3])) 
+
 
 def addMark(marktext):
     filepath=os.path.join(USR_DIR,user,OWL_LOGFILE)
@@ -256,25 +296,41 @@ def addMark(marktext):
         f.write(marktext+"\n")    
 
 
-class LinkMark:
+
+class Comment:
+    def __init__(self,link,user,text):
+        self.link=link
+        self.user=user
+        self.text=text
+        self.stamp=dt.timestamp(dt.today())
+    
+    def string(self):
+        d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
+        return "* De %s en %s\n%s\n\n" % (self.user,d,self.text.replace("\\n","\n"))
+
+
+
+class Link:
     def __init__(self,user, args):
         self.stamp=args[0]
         self.key=args[2]
         self.url=args[3]
         self.ups={}
         self.views={}
+        self.comments=[]
         self.title="".join(args[4:]).strip("\n")
         self.user=user
 
     def stringHeader(self):
-        prot="HTTP"
+        prot="H"
         if (self.url.startswith("gemini://")):
-            prot="GEM"
+            prot="G"
         ups=len(self.ups)
+        cms=len(self.comments)
         if (user in self.views):
-            return "[{0:<4}:{1:>2} ups] {2}\n".format(prot,ups,self.title)
+            return "[{0}|{1:>2} v|{2:>2} c] {3}\n".format(prot,ups,cms,self.title)
         else:
-            return "[{0:<4}:{1:>2} ups] {2}{3}{4}\n".format(prot,ups,fontStyle.BOLD,self.title,fontStyle.END)
+            return "[{0}|{1:>2} v|{2:>2} c] {3}{4}{5}\n".format(prot,ups,cms,fontStyle.BOLD,self.title,fontStyle.END)
             
 
     def stringExtended(self):
@@ -283,13 +339,20 @@ class LinkMark:
         if (self.url.startswith("gemini://")):
             prot="GEM"
         ups=len(self.ups)
-        return "%s\t- De %s el %s\n\t- Url: %s"%(self.stringHeader(),self.user,d,self.url)
+        cmts=""
+        for c in self.comments:
+            cmts+=c.string()
+
+        return "%s\t- De %s el %s\n\t- Url: %s\n\n%s\n"%(self.stringHeader(),self.user,d,self.url,cmts)
 
     def addVoteFrom(self,user):
         self.ups[user]=1 
 
     def addViewer(self,user):
         self.views[user]=1
+
+    def addComment(self,cmt):
+        self.comments.append(cmt)
 
 
 
