@@ -208,13 +208,17 @@ def comment(args):
     if ((number>0) and (number <= len(sorted_marks))):
         key=sorted_marks[number-1].key
         stamp=dt.timestamp(dt.today())
-        print("Escribe tu comentario (max 500 palabras). Pulsa Ctrl-D para guardarlo.")
+        print("Escribe tu comentario (max 500 palabras). Pulsa Enter y Ctrl-D para guardarlo.")
         lines = []
         while True:
             try:
                 line = input()
             except EOFError:
                 break
+            except:
+                print ("\n\nError: El comentario tiene caracteres no válidos y no se guardó")
+                return
+                
             lines.append(line)
 
         text="\\n".join(lines)
