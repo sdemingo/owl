@@ -278,7 +278,7 @@ def loadUserLog(userlog):
             fields=l.strip("\n").split(";")
             if (len(fields)>2):
                 if (fields[1] == "add"):
-                    mark=Link(user,fields)
+                    mark=Link(userlog,fields)
                     sorted_marks.append(mark)
                     link_list[mark.key]=mark
 
