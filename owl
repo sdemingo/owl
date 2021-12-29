@@ -21,8 +21,6 @@
 
 
 # próximo:
-# - comentar enlaces
-# - mostrar comentarios
 # - fichero de configuración personal
 # - permitir etiquetar enlaces (con una marca aparte en el log)
 # - permitir listar por usuario, etiquetas, ...
@@ -41,6 +39,7 @@ USR_DIR="/home"
 HTTP_BROWSER="w3m"
 GEMINI_BROWSER="amfora"
 LINKS_PER_PAGE=10
+MAX_COMMENT_SIZE=500
 WELCOME_MESSAGE=r"""
                   /^----^\
                   | 0  0 |
@@ -111,12 +110,12 @@ def openbrowser(args):
     Comando para abrir enlaces en el browser apropiado
     """
     if (len(args)<1):
-        print ("Faltan argumentos")
+        print ("Error: Faltan argumentos")
         return
     try:
         number=int(args[0])
     except:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
         return
     if ((number>0) and (number <= len(sorted_marks))):
         url = sorted_marks[number-1].url
@@ -132,7 +131,7 @@ def openbrowser(args):
             link=link_list[key]
             link.addViewer(user)
     else:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
 
 
 def vote(args):
@@ -140,12 +139,12 @@ def vote(args):
     Comando para votar enlaces
     """
     if (len(args)<1):
-        print ("Falta id del enlace")
+        print ("Error: Falta id del enlace")
         return
     try:
         number=int(args[0])
     except:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
         return
     if ((number>0) and (number <= len(sorted_marks))):
         key=sorted_marks[number-1].key
@@ -157,7 +156,7 @@ def vote(args):
             link=link_list[key]
             link.addVoteFrom(user)
     else:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
 
 
 def vhelp(args):
@@ -177,18 +176,18 @@ def view(args):
     Comando para añadir ver detalles de los enlaces (propietario, fecha, comentarios, ...)
     """
     if (len(args)<1):
-        print ("Falta id del enlace")
+        print ("Error: Falta id del enlace")
         return
     try:
         number=int(args[0])
     except:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
         return
     if ((number>0) and (number <= len(sorted_marks))):
         key=sorted_marks[number-1].key
         print ("%s"%sorted_marks[number-1].stringExtended())
     else:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
 
 
 def comment(args):
@@ -196,12 +195,12 @@ def comment(args):
     Comando para añadir comentarios a un enlace
     """    
     if (len(args)<1):
-        print ("Falta id del enlace")
+        print ("Error: Falta id del enlace")
         return
     try:
         number=int(args[0])
     except:
-        print ("Id incorrecto")
+        print ("Error: Id incorrecto")
         return
     if ((number>0) and (number <= len(sorted_marks))):
         key=sorted_marks[number-1].key
@@ -216,11 +215,14 @@ def comment(args):
             lines.append(line)
 
         text="\\n".join(lines)
-        addMark("%f;cmt;%s;%s" %(stamp,key,text))
-        link=link_list[key]
-        link.addComment(Comment(link,user,text))
+        if (len(text.strip())==0) or (len(text)>=MAX_COMMENT_SIZE):
+            print ("\n\nError: El comentario no es válido. Es vacio o demasiado largo")
+        else:
+            addMark("%f;cmt;%s;%s" %(stamp,key,text))
+            link=link_list[key]
+            link.addComment(Comment(link,user,text))
     else:
-        print ("Id incorrecto")    
+        print ("Error: Id incorrecto")    
 
 
 
