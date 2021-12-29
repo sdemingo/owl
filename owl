@@ -261,7 +261,7 @@ def loadGlobalLog():
     for d in dirs:
         if os.path.isfile(os.path.join(USR_DIR,d,OWL_LOGFILE)):
             user=d
-            loadUserLog(user)
+            loadUserLog(d)
     sorted_marks=sorted(sorted_marks,key=lambda m:m.stamp,reverse=True)
 
 
@@ -285,17 +285,17 @@ def loadUserLog(userlog):
                 if (fields[1] == "vote"):
                     key=fields[2]
                     link=link_list[key]
-                    link.addVoteFrom(user)
+                    link.addVoteFrom(userlog)
 
                 if (fields[1] == "open"):
                     key=fields[2]
                     link=link_list[key]
-                    link.addViewer(user)   
+                    link.addViewer(userlog)   
 
                 if (fields[1] == "cmt"):
                     key=fields[2]
                     link=link_list[key]
-                    link.addComment(Comment(link,user,fields[3])) 
+                    link.addComment(Comment(link,userlog,fields[3])) 
             nline+=1
         except:
             log_errors.append(userlog+":"+str(nline))
