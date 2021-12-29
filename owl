@@ -218,7 +218,7 @@ def comment(args):
             except:
                 print ("\n\nError: El comentario tiene caracteres no válidos y no se guardó")
                 return
-                
+
             lines.append(line)
 
         text="\\n".join(lines)
@@ -299,7 +299,7 @@ def loadUserLog(userlog):
                 if (fields[1] == "cmt"):
                     key=fields[2]
                     link=link_list[key]
-                    link.addComment(Comment(link,userlog,fields[3])) 
+                    link.addComment(Comment(link,userlog,fields)) 
             nline+=1
         except:
             log_errors.append(userlog+":"+str(nline))
@@ -313,11 +313,11 @@ def addMark(marktext):
 
 
 class Comment:
-    def __init__(self,link,user,text):
+    def __init__(self,link,user,args):
         self.link=link
         self.user=user
-        self.text=text
-        self.stamp=dt.timestamp(dt.today())
+        self.text=args[3]
+        self.stamp=args[0]
     
     def string(self):
         d=dt.fromtimestamp(float(self.stamp)).strftime("%d %b %Y %H:%M")
